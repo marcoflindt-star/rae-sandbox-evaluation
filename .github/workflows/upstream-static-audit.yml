@@ -1,0 +1,57 @@
+name: Upstream RAE static audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RAE_COMMIT: ab9919b652eca1c7b323c3f7c7b37ded3cef12a0
+      RAE_REPOSITORY: https://github.com/kalil0321/reverse-api-engineer.git
+    steps:
+      - name: Checkout evaluation harness
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af6831 # v4.2.2
+      - name: Fetch exact upstream commit without installing dependencies
+        run: |
+          git clone --no-checkout "$RAE_REPOSITORY" upstream
+          git -C upstream checkout --detach "$RAE_COMMIT"
+          test "$(git -C upstream rev-parse HEAD)" = "$RAE_COMMIT"
+      - name: Parse and compile Python source
+        run: |
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          root = Path('upstream')
+          files = list((root / 'src').rglob('*.py')) + list((root / 'tests').rglob('*.py'))
+          for path in files:
+              ast.parse(path.read_text(encoding='utf-8'), filename=str(path))
+          print(f'AST files: {len(files)}')
+          PY
+          python3 -m compileall -q upstream/src upstream/tests
+      - name: Scan source for high-risk runtime paths
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          patterns = ('@latest', 'npm install', 'npx ', 'pip install', '--auto-install', '--autoConnect', 'bypassPermissions')
+          hits = []
+          for path in Path('upstream/src').rglob('*'):
+              if path.is_file() and path.suffix in {'.py', '.md'}:
+                  text = path.read_text(encoding='utf-8', errors='replace')
+                  for line_no, line in enumerate(text.splitlines(), 1):
+                      if any(pattern in line for pattern in patterns):
+                          hits.append(f'{path}:{line_no}:{line.strip()}')
+          print('\n'.join(hits))
+          if not hits:
+              raise SystemExit('expected high-risk paths were not found; audit fixture is stale')
+          PY
+      - name: Check for secret-like files
+        run: |
+          if find upstream -type f \( -name '*.env' -o -name '*.pem' -o -name '*.key' -o -iname '*credentials*' \) -print -quit | grep -q .; then
+            echo 'secret-like files found'
+            exit 1
+          fi
