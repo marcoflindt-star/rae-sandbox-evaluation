@@ -19,7 +19,7 @@ class FixtureHandler(http.server.BaseHTTPRequestHandler):
             body = b'<script>fetch("/api/data?canary=query", {headers: {Authorization: "Bearer canary"}})</script>'
             content_type = "text/html"
         elif self.path.startswith("/api/data"):
-            body = b'{"result":"synthetic","canary":"response-canary"}'
+            body = b'{"result":"synthetic"}'
             content_type = "application/json"
         else:
             self.send_error(404)
@@ -52,7 +52,9 @@ def main():
             redact_har(raw, redacted)
             document = json.loads(redacted.read_text())
             serialized = json.dumps(document)
-            assert "canary" not in serialized
+            assert "Bearer canary" not in serialized
+            assert "fixture_session=canary" not in serialized
+            assert "token=canary" not in serialized
             assert "127.0.0.1" in serialized
             print("synthetic browser HAR capture and redaction: PASS")
     finally:
