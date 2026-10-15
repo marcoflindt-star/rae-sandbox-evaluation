@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
+      RAE_ARTIFACT_DIR: artifacts
       RAE_ISOLATION_ATTESTED: ""
       RAE_SNAPSHOT_ID: ""
       RAE_EGRESS_LOG: ""
@@ -33,3 +34,10 @@ jobs:
           python3 -m playwright install --with-deps chromium
       - name: Capture and redact synthetic HAR
         run: python3 tests/test_browser_har.py
+      - name: Upload synthetic evaluation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: synthetic-evaluation-evidence
+          path: artifacts/
+          if-no-files-found: error
