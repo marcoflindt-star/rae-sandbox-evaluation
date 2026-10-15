@@ -9,6 +9,9 @@ def main():
         "network_mode: none",
         "user: \"65532:65532\"",
         "RAE_EXECUTION_CONFIRMATION: \"\"",
+        "pids_limit: 128",
+        "cpus: 1.0",
+        "mem_limit: 1g",
     ):
         assert marker in compose
     for marker in ("privileged: true", "docker.sock", "network_mode: host"):
