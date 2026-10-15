@@ -45,6 +45,17 @@ def main():
             with sync_playwright() as playwright:
                 browser = playwright.chromium.launch(headless=True, args=["--disable-background-networking", "--no-first-run"])
                 context = browser.new_context(record_har_path=str(raw), record_har_content="embed")
+                egress_log = []
+
+                def guard_request(route):
+                    host = urlparse(route.request.url).hostname
+                    egress_log.append({"url": route.request.url, "host": host})
+                    if host not in {"127.0.0.1", "localhost"}:
+                        route.abort()
+                        raise AssertionError(f"blocked unexpected egress host: {host}")
+                    route.continue_()
+
+                context.route("**/*", guard_request)
                 page = context.new_page()
                 page.goto(f"http://127.0.0.1:{server.server_port}/", wait_until="networkidle")
                 page.evaluate("fetch('/api/data?token=canary', {headers: {Authorization: 'Bearer canary'}})")
@@ -57,6 +68,8 @@ def main():
             assert "fixture_session=canary" not in serialized
             assert "token=canary" not in serialized
             assert "127.0.0.1" in serialized
+            assert egress_log and all(item["host"] in {"127.0.0.1", "localhost"} for item in egress_log)
+            (Path(directory) / "egress.log").write_text(json.dumps(egress_log, indent=2))
             print("synthetic browser HAR capture and redaction: PASS")
     finally:
         server.shutdown()
