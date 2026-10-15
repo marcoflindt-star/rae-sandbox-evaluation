@@ -50,4 +50,5 @@ def redact_har(source: Path, destination: Path) -> None:
         if isinstance(request.get("url"), str):
             parts = urlsplit(request["url"])
             request["url"] = parts._replace(query="", fragment="").geturl()
+            request["queryString"] = []
     destination.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
