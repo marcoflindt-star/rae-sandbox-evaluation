@@ -16,7 +16,7 @@ from rae_guard import redact_har
 class FixtureHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
-            body = b'<script>fetch("/api/data?canary=query", {headers: {Authorization: "Bearer canary"}})</script>'
+            body = b"<body>synthetic fixture</body>"
             content_type = "text/html"
         elif self.path.startswith("/api/data"):
             body = b'{"result":"synthetic"}'
@@ -47,6 +47,7 @@ def main():
                 context = browser.new_context(record_har_path=str(raw), record_har_content="embed")
                 page = context.new_page()
                 page.goto(f"http://127.0.0.1:{server.server_port}/", wait_until="networkidle")
+                page.evaluate("fetch('/api/data?token=canary', {headers: {Authorization: 'Bearer canary'}})")
                 context.close()
                 browser.close()
             redact_har(raw, redacted)
