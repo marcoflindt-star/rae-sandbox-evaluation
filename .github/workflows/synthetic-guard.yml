@@ -1,0 +1,29 @@
+name: Synthetic RAE guard evaluation
+
+on:
+  workflow_dispatch:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      RAE_ISOLATION_ATTESTED: ""
+      RAE_SNAPSHOT_ID: ""
+      RAE_EGRESS_LOG: ""
+      RAE_ARTIFACT_SHA256: ""
+      SSH_AUTH_SOCK: ""
+      DOCKER_HOST: ""
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af6831 # v4.2.2
+      - name: Verify runner is clean and unprivileged for this test
+        run: |
+          test -z "$SSH_AUTH_SOCK"
+          test -z "$DOCKER_HOST"
+          test "$(id -u)" != "0"
+      - name: Run synthetic fail-closed tests
+        run: python3 tests/test_guard.py
