@@ -1,9 +1,12 @@
 import http.server
 import json
+import sys
 import threading
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
+
+sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from playwright.sync_api import sync_playwright
 
