@@ -37,6 +37,7 @@ def test_har_redaction():
             "url": "https://fixture.test/api?token=canary",
             "headers": [{"name": "Authorization", "value": "Bearer canary"}],
             "cookies": [{"name": "sid", "value": "canary"}],
+            "queryString": [{"name": "token", "value": "canary"}],
         }}]}}))
         redact_har(source, target)
         result = json.loads(target.read_text())
@@ -44,6 +45,7 @@ def test_har_redaction():
         assert "token=canary" not in request["url"]
         assert request["headers"][0]["value"] == "[REDACTED]"
         assert request["cookies"][0]["value"] == "[REDACTED]"
+        assert request["queryString"] == []
 
 
 if __name__ == "__main__":
