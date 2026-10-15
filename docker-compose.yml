@@ -1,0 +1,30 @@
+services:
+  rae-evaluation:
+    build:
+      context: .
+      dockerfile: Dockerfile.evaluation
+    init: true
+    user: "65532:65532"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    network_mode: none
+    pids_limit: 128
+    cpus: 1.0
+    mem_limit: 1g
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=256m
+    environment:
+      RAE_ISOLATION_ATTESTED: "1"
+      RAE_SNAPSHOT_ID: "synthetic-pre-run"
+      RAE_EGRESS_LOG: "/run/evidence/egress.log"
+      RAE_ARTIFACT_SHA256: "synthetic-only"
+      RAE_ALLOWED_HOSTS: ""
+      RAE_EXECUTION_CONFIRMATION: ""
+    volumes:
+      - type: tmpfs
+        target: /run/evidence
+        tmpfs:
+          size: 67108864

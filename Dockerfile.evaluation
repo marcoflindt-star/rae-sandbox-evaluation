@@ -1,0 +1,8 @@
+FROM python:3.12-slim
+
+RUN useradd --uid 65532 --no-create-home --shell /usr/sbin/nologin evaluator
+WORKDIR /opt/evaluation
+COPY rae_guard.py /opt/evaluation/rae_guard.py
+COPY tests/test_guard.py /opt/evaluation/tests/test_guard.py
+USER 65532:65532
+ENTRYPOINT ["python3", "/opt/evaluation/tests/test_guard.py"]

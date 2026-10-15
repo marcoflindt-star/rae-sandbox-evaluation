@@ -28,6 +28,8 @@ jobs:
           test "$(id -u)" != "0"
       - name: Run synthetic fail-closed tests
         run: python3 tests/test_guard.py
+      - name: Validate container policy
+        run: python3 -m pytest -q tests/test_container_policy.py
       - name: Install pinned browser test dependency
         run: |
           python3 -m pip install --disable-pip-version-check --no-cache-dir 'playwright==1.58.0'
