@@ -63,6 +63,10 @@ jobs:
         run: python3 tests/test_log_permissions.py
       - name: Run artifact export manifest test
         run: python3 tests/test_export_manifest.py
+      - name: Run reproducibility test
+        run: python3 tests/test_reproducibility.py
+      - name: Run preproduction release gate
+        run: python3 tests/test_release_gate.py
       - name: Upload synthetic evaluation evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
